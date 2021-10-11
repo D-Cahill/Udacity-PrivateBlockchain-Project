@@ -65,28 +65,32 @@ class Blockchain {
         let self = this;
         return new Promise(async (resolve, reject) => {
            try {
-            const chainHeight = await self.getChainHeight(); //Get Chain Height
-            if(chainHeight >= 0) { //If not genisis block
-                const previousBlock = await self.getBlockByHeight(chainHeight); //Get Previous Block
-                block.previousBlockHash = previousBlock.hash; // Set previous block hash for new block
-                block.height = chainHeight + 1; //New block height equals chain height + 1
-                block.time = new Date().getTime().toString().slice(0,-3); //Set time for new bock
-                block.hash = SHA256(JSON.stringify(block)).toString(); //New block hash
-                self.chain.push(block); //Push new block to chain
-                self.height++; //Add chain height
-                await self.validateChain(); //Validate Chain
-                resolve(block);
-            } else { // Adding Genisis Block
-                block.height = 0; //Set Block Height to 0
-                block.time = new Date().getTime().toString().slice(0,-3); //Set block time
-                block.hash = SHA256(JSON.stringify(block)).toString(); //Set block hash
-                self.chain.push(block); //Push block to chain
-                self.height++; //Chain Height
-                resolve(block);
+                const chainHeight = await self.getChainHeight(); //Get Chain Height
+                if(chainHeight >= 0) { //If not genisis block
+                    const previousBlock = await self.getBlockByHeight(chainHeight); //Get Previous Block
+                    block.previousBlockHash = previousBlock.hash; // Set previous block hash for new block
+                    block.height = chainHeight + 1; //New block height equals chain height + 1
+                    block.time = new Date().getTime().toString().slice(0,-3); //Set time for new bock
+                    block.hash = SHA256(JSON.stringify(block)).toString(); //New block hash
+                    let chainValidationLogs = await self.validateChain(); //Validate Chain
+                    if(chainValidationLogs.length === 0) { //If no errors in chain
+                        self.chain.push(block); //Push new block to chain
+                        self.height++; //Add chain height
+                        resolve(block);
+                    } else { //If errors during chain validation
+                        reject('Error during chain validation');
+                    }
+                } else { // Adding Genisis Block
+                    block.height = 0; //Set Block Height to 0
+                    block.time = new Date().getTime().toString().slice(0,-3); //Set block time
+                    block.hash = SHA256(JSON.stringify(block)).toString(); //Set block hash
+                    self.chain.push(block); //Push block to chain
+                    self.height++; //Chain Height
+                    resolve(block);
+                }
+                } catch (err) {
+                    reject(new Error(err));
             }
-            } catch (err) {
-                reject(new Error(err));
-           }
         });
     }
 
@@ -250,7 +254,6 @@ class Blockchain {
                     }
                     chainIndex++;
                 });
-                console.log('Error Count:'+ errorLog.length)
                 resolve(errorLog);
             }
             catch (err) {
