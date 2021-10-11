@@ -246,8 +246,8 @@ class Blockchain {
                     promises.push(b.validate());
                     if(b.height > 0) //this is not Genesis
                     {
-                        let prevHash=b.previousBlockHash;
-                        let bHash=chain[chainIndex-1].hash;
+                        let prevHash = b.previousBlockHash;
+                        let bHash = self.chain[chainIndex-1].hash;
                         if(bHash != prevHash){
                             errorLog.push(`Error - Block Height: ${b.height} - Previous hash don't match`);
                         }
