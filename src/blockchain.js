@@ -236,25 +236,19 @@ class Blockchain {
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
             try {
-                //Loop through chain
-                self.chain.forEach(async block => {
-                    console.log(block.height)
-                    if(block.height > 0) { //Skip Genisis block
-                        //Block Validation Check
-                        await block.validate()
-                        .then(function(validationResult) {
-                            if(!validationResult){ //If not valid push error
-                                errorLog.push({error: 'Block validation failed at block height:' + block.height })
-                            }
-                        });
-                        //Hashes Check
-                        await self.getBlockByHeight(block.height -1) //Get previous block
-                        .then(function(previousBlock) { //Get result from promise. 
-                            if (previousBlock.hash !== block.previousBlockHash){ //Check if hashes are not equal
-                                errorLog.push({error: 'Hash of previous block do not match at block height:' + block.height});
-                            }
-                        });
+                let promises=[];
+                let chainIndex=0;
+                self.chain.forEach(b => { //Loop Chain
+                    promises.push(b.validate());
+                    if(b.height > 0) //this is not Genesis
+                    {
+                        let prevHash=b.previousBlockHash;
+                        let bHash=chain[chainIndex-1].hash;
+                        if(bHash != prevHash){
+                            errorLog.push(`Error - Block Height: ${b.height} - Previous hash don't match`);
+                        }
                     }
+                    chainIndex++;
                 });
                 console.log('Error Count:'+ errorLog.length)
                 resolve(errorLog);
